@@ -3,7 +3,24 @@ class UserController {
         this.formUser = document.getElementById(formId);
         this.tableId = document.getElementById(tableId);
         this.onSubmit();
+        this.onEditCancel();
     }
+
+    onEditCancel(){
+        document.querySelector('#box-user-update .btn-cancelar').addEventListener('click', e => {
+            this.showPainelCreate();
+        })
+    }
+
+    showPainelCreate(){
+        document.querySelector('#box-user-create').style.display = 'block';
+        document.querySelector('#box-user-update').style.display = 'none';
+    }
+    showPainelUpdate(){
+        document.querySelector('#box-user-create').style.display = 'none';
+        document.querySelector('#box-user-update').style.display = 'block';
+    }
+
 
     addLine(user) {
 
@@ -18,9 +35,14 @@ class UserController {
             <td>${(user.admin ? 'Sim' : 'Não')}</td>
             <td>${Utils.dateFormate(user.register)}</td>
             <td>
-                <button type="button" class="btn btn-primary btn-xs btn-flat">Editar</button>
+                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
+        tr.querySelector('.btn-edit').addEventListener('click',e=>{
+            console.log(JSON.parse(tr.dataset.user));
+            this.showPainelUpdate();
+        })
+
         this.tableId.appendChild(tr);
 
         this.updateCount();
