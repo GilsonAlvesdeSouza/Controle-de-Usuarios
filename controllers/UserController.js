@@ -5,9 +5,12 @@ class UserController {
         this.onSubmit();
     }
 
-    addLine(user, tableId) {
+    addLine(user) {
 
         let tr = document.createElement('tr');
+
+        tr.dataset.user = JSON.stringify(user);
+
         tr.innerHTML =
             `<td><img src="${user.photo}" alt="User Image" class="img-circle img-sm"></td>
             <td>${user.name}</td>
@@ -19,6 +22,23 @@ class UserController {
                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
         this.tableId.appendChild(tr);
+
+        this.updateCount();
+    }
+
+    updateCount() {
+        let numberUsers = 0;
+        let numberUsersAdmin = 0;
+
+        [...this.tableId.children].forEach(tr => {
+            numberUsers++;
+            let user = JSON.parse(tr.dataset.user);
+            if (user._admin) {
+                numberUsersAdmin++;
+            }
+        });
+        document.querySelector('#number-users').innerHTML = numberUsers;
+        document.querySelector('#number-users-admin').innerHTML = numberUsersAdmin ;
     }
 
     onSubmit() {
@@ -28,6 +48,8 @@ class UserController {
 
             let btnSubmit = this.formUser.querySelector('[type=submit]');
             btnSubmit.disable = true;
+
+            if (!user) return false;
 
             this.getPhoto().then(
                 (content) => {
