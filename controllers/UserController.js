@@ -6,17 +6,18 @@ class UserController {
         this.onEditCancel();
     }
 
-    onEditCancel(){
+    onEditCancel() {
         document.querySelector('#box-user-update .btn-cancelar').addEventListener('click', e => {
             this.showPainelCreate();
         })
     }
 
-    showPainelCreate(){
+    showPainelCreate() {
         document.querySelector('#box-user-create').style.display = 'block';
         document.querySelector('#box-user-update').style.display = 'none';
     }
-    showPainelUpdate(){
+
+    showPainelUpdate() {
         document.querySelector('#box-user-create').style.display = 'none';
         document.querySelector('#box-user-update').style.display = 'block';
     }
@@ -32,14 +33,41 @@ class UserController {
             `<td><img src="${user.photo}" alt="User Image" class="img-circle img-sm"></td>
             <td>${user.name}</td>
             <td>${user.email}</td>
-            <td>${(user.admin ? 'Sim' : 'Não')}</td>
+            <td>${(user.admin) ? '✅' : '❌'}</td>
             <td>${Utils.dateFormate(user.register)}</td>
             <td>
                 <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
-        tr.querySelector('.btn-edit').addEventListener('click',e=>{
-            console.log(JSON.parse(tr.dataset.user));
+        tr.querySelector('.btn-edit').addEventListener('click', e => {
+            let json = JSON.parse(tr.dataset.user);
+            let form = document.querySelector('#form-user-update');
+
+            for (let name in json) {
+                let field = form.querySelector(`[name=${name.replace('_', '')}]`);
+
+
+                if (field) {
+
+                    switch (field.type) {
+                        case 'file':
+                            continue;
+
+                        case 'radio':
+                            field = form.querySelector(`[name=${name.replace('_', '')}][value=${json[name]}`);
+                            field.checked = true;
+                            break;
+
+                        case 'checkbox':
+                            field.checked = json[name];
+                            break;
+                        default:
+                            field.value = json[name];
+
+                    }
+                }
+            }
+
             this.showPainelUpdate();
         })
 
@@ -60,7 +88,7 @@ class UserController {
             }
         });
         document.querySelector('#number-users').innerHTML = numberUsers;
-        document.querySelector('#number-users-admin').innerHTML = numberUsersAdmin ;
+        document.querySelector('#number-users-admin').innerHTML = numberUsersAdmin;
     }
 
     onSubmit() {
