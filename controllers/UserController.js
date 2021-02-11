@@ -1,9 +1,10 @@
 class UserController {
-    constructor(formId, tableId) {
-        this.formUser = document.getElementById(formId);
-        this.tableId = document.getElementById(tableId);
+    constructor(formId, tableEl) {
+        this.formEl = document.getElementById(formId);
+        this.tableEl = document.getElementById(tableEl);
         this.onSubmit();
         this.onEditCancel();
+        this.removeErrorRequired();
     }
 
     onEditCancel() {
@@ -71,7 +72,7 @@ class UserController {
             this.showPainelUpdate();
         })
 
-        this.tableId.appendChild(tr);
+        this.tableEl.appendChild(tr);
 
         this.updateCount();
     }
@@ -80,7 +81,7 @@ class UserController {
         let numberUsers = 0;
         let numberUsersAdmin = 0;
 
-        [...this.tableId.children].forEach(tr => {
+        [...this.tableEl.children].forEach(tr => {
             numberUsers++;
             let user = JSON.parse(tr.dataset.user);
             if (user._admin) {
@@ -92,11 +93,11 @@ class UserController {
     }
 
     onSubmit() {
-        this.formUser.addEventListener('submit', (event) => {
+        this.formEl.addEventListener('submit', (event) => {
             event.preventDefault();
             let user = this.getValues();
 
-            let btnSubmit = this.formUser.querySelector('[type=submit]');
+            let btnSubmit = this.formEl.querySelector('[type=submit]');
             btnSubmit.disable = true;
 
             if (!user) return false;
@@ -106,7 +107,7 @@ class UserController {
                     user.photo = content;
                     this.addLine(user);
 
-                    this.formUser.reset();
+                    this.formEl.reset();
 
                     btnSubmit.disable = false;
                 },
@@ -120,7 +121,7 @@ class UserController {
         return new Promise((resolve, reject) => {
             let fileReader = new FileReader();
 
-            let itens = [...this.formUser.elements].filter(item => {
+            let itens = [...this.formEl.elements].filter(item => {
                 if (item.name === 'photo') {
                     return item;
                 }
@@ -144,11 +145,33 @@ class UserController {
 
     }
 
+    addEventListenerAll(element, events, fn){
+        events.split(' ').forEach(event => {
+            element.addEventListener(event, fn, false);
+        });
+    }
+
+    removeErrorRequired() {
+        let formName = this.formEl.querySelector('[name=name]');
+        let formEmail = this.formEl.querySelector('[name=email]');
+        let formPassword = this.formEl.querySelector('[name=password]');
+
+        let inputs = [formName, formEmail, formPassword];
+
+        inputs.forEach(input=>{
+            this.addEventListenerAll(input,'click keyup', evt => {
+                input.parentElement.classList.remove('has-error');
+            });
+        });
+    }
+
     getValues() {
         let user = {};
         let formValid = true;
 
-        [...this.formUser.elements].forEach((field, index) => {
+        // console.log(this.formEl.querySelector('[name=name]'));
+
+        [...this.formEl.elements].forEach((field, index) => {
 
             if (['name', 'email', 'password',].indexOf(field.name) > -1 && !field.value) {
                 field.parentElement.classList.add('has-error');
