@@ -1,16 +1,42 @@
 class UserController {
-    constructor(formId, tableEl) {
-        this.formEl = document.getElementById(formId);
+    constructor(formIdCreate, formIdUpdate, tableEl) {
+        this.formIdCreate = document.getElementById(formIdCreate);
+        this.formIdUpdate = document.getElementById(formIdUpdate);
         this.tableEl = document.getElementById(tableEl);
         this.onSubmit();
-        this.onEditCancel();
+        this.onEdit();
         this.removeErrorRequired();
     }
 
-    onEditCancel() {
+    onEdit() {
         document.querySelector('#box-user-update .btn-cancelar').addEventListener('click', e => {
             this.showPainelCreate();
-        })
+        });
+
+        this.formIdUpdate.addEventListener('submit', event => {
+            event.preventDefault();
+            let btn = this.formIdUpdate.querySelector("[type=submit]");
+            btn.disabled = true;
+
+            let values = this.getValues(this.formIdUpdate);
+
+            let index = this.formIdUpdate.dataset.trIndex;
+            let tr = this.tableEl.rows[index];
+            tr.dataset.user = JSON.stringify(values);
+
+            tr.innerHTML =
+                `<td><img src="${values.photo}" alt="User Image" class="img-circle img-sm"></td>
+            <td>${values.name}</td>
+            <td>${values.email}</td>
+            <td>${(values.admin) ? '✅' : '❌'}</td>
+            <td>${Utils.dateFormate(values.register)}</td>
+            <td>
+                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+            </td>`;
+            this.addEventTr(tr);
+            this.updateCount();
+        });
     }
 
     showPainelCreate() {
@@ -40,9 +66,18 @@ class UserController {
                 <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
+        this.addEventTr(tr);
+
+        this.tableEl.appendChild(tr);
+
+        this.updateCount();
+    }
+
+    addEventTr(tr) {
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             let json = JSON.parse(tr.dataset.user);
             let form = document.querySelector('#form-user-update');
+            form.dataset.trIndex = tr.sectionRowIndex;
 
             for (let name in json) {
                 let field = form.querySelector(`[name=${name.replace('_', '')}]`);
@@ -71,10 +106,6 @@ class UserController {
 
             this.showPainelUpdate();
         })
-
-        this.tableEl.appendChild(tr);
-
-        this.updateCount();
     }
 
     updateCount() {
@@ -93,11 +124,11 @@ class UserController {
     }
 
     onSubmit() {
-        this.formEl.addEventListener('submit', (event) => {
+        this.formIdCreate.addEventListener('submit', (event) => {
             event.preventDefault();
-            let user = this.getValues();
+            let user = this.getValues(this.formIdCreate);
 
-            let btnSubmit = this.formEl.querySelector('[type=submit]');
+            let btnSubmit = this.formIdCreate.querySelector('[type=submit]');
             btnSubmit.disable = true;
 
             if (!user) return false;
@@ -107,7 +138,7 @@ class UserController {
                     user.photo = content;
                     this.addLine(user);
 
-                    this.formEl.reset();
+                    this.formIdCreate.reset();
 
                     btnSubmit.disable = false;
                 },
@@ -121,7 +152,7 @@ class UserController {
         return new Promise((resolve, reject) => {
             let fileReader = new FileReader();
 
-            let itens = [...this.formEl.elements].filter(item => {
+            let itens = [...this.formIdCreate.elements].filter(item => {
                 if (item.name === 'photo') {
                     return item;
                 }
@@ -145,33 +176,33 @@ class UserController {
 
     }
 
-    addEventListenerAll(element, events, fn){
+    addEventListenerAll(element, events, fn) {
         events.split(' ').forEach(event => {
             element.addEventListener(event, fn, false);
         });
     }
 
     removeErrorRequired() {
-        let formName = this.formEl.querySelector('[name=name]');
-        let formEmail = this.formEl.querySelector('[name=email]');
-        let formPassword = this.formEl.querySelector('[name=password]');
+        let formName = this.formIdCreate.querySelector('[name=name]');
+        let formEmail = this.formIdCreate.querySelector('[name=email]');
+        let formPassword = this.formIdCreate.querySelector('[name=password]');
 
         let inputs = [formName, formEmail, formPassword];
 
-        inputs.forEach(input=>{
-            this.addEventListenerAll(input,'click keyup', evt => {
+        inputs.forEach(input => {
+            this.addEventListenerAll(input, 'click keyup', evt => {
                 input.parentElement.classList.remove('has-error');
             });
         });
     }
 
-    getValues() {
+    getValues(form) {
         let user = {};
         let formValid = true;
 
-        // console.log(this.formEl.querySelector('[name=name]'));
+        // console.log(this.formIdCreate.querySelector('[name=name]'));
 
-        [...this.formEl.elements].forEach((field, index) => {
+        [...form.elements].forEach((field, index) => {
 
             if (['name', 'email', 'password',].indexOf(field.name) > -1 && !field.value) {
                 field.parentElement.classList.add('has-error');
