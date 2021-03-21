@@ -14,6 +14,7 @@ class UserController {
         });
 
         this.formIdUpdate.addEventListener('submit', event => {
+
             event.preventDefault();
             let btn = this.formIdUpdate.querySelector("[type=submit]");
             btn.disabled = true;
