@@ -23,20 +23,38 @@ class UserController {
 
             let index = this.formIdUpdate.dataset.trIndex;
             let tr = this.tableEl.rows[index];
-            tr.dataset.user = JSON.stringify(values);
 
-            tr.innerHTML =
-                `<td><img src="${values.photo}" alt="User Image" class="img-circle img-sm"></td>
-            <td>${values.name}</td>
-            <td>${values.email}</td>
-            <td>${(values.admin) ? '✅' : '❌'}</td>
-            <td>${Utils.dateFormate(values.register)}</td>
-            <td>
-                <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
-                <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
-            </td>`;
-            this.addEventTr(tr);
-            this.updateCount();
+            let userOld = JSON.parse(tr.dataset.user);
+            let result = Object.assign({}, userOld, values);
+
+
+            this.getPhoto(this.formIdUpdate).then(
+                (content) => {
+                    if (!values.photo) {
+                        result._photo = userOld._photo;
+                    } else {
+                        result._photo = content;
+                    }
+                    tr.dataset.user = JSON.stringify(result);
+                    tr.innerHTML =
+                        `<td><img src="${result._photo}" alt="User Image" class="img-circle img-sm"></td>
+                        <td>${result._name}</td>
+                        <td>${result._email}</td>
+                        <td>${(result._admin) ? '✅' : '❌'}</td>
+                        <td>${Utils.dateFormate(result._register)}</td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
+                            <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
+                        </td>`;
+                    this.formIdUpdate.reset();
+                    this.addEventTr(tr);
+                    this.updateCount();
+                    btn.disabled = false;
+                    this.showPainelCreate();
+                },
+                (e) => {
+                    console.error(e);
+                });
         });
     }
 
@@ -67,6 +85,7 @@ class UserController {
                 <button type="button" class="btn btn-primary btn-edit btn-xs btn-flat">Editar</button>
                 <button type="button" class="btn btn-danger btn-xs btn-flat">Excluir</button>
             </td>`;
+
         this.addEventTr(tr);
 
         this.tableEl.appendChild(tr);
@@ -77,11 +96,10 @@ class UserController {
     addEventTr(tr) {
         tr.querySelector('.btn-edit').addEventListener('click', e => {
             let json = JSON.parse(tr.dataset.user);
-            let form = document.querySelector('#form-user-update');
-            form.dataset.trIndex = tr.sectionRowIndex;
+            this.formIdUpdate.dataset.trIndex = tr.sectionRowIndex;
 
             for (let name in json) {
-                let field = form.querySelector(`[name=${name.replace('_', '')}]`);
+                let field = this.formIdUpdate.querySelector(`[name=${name.replace('_', '')}]`);
 
 
                 if (field) {
@@ -91,7 +109,7 @@ class UserController {
                             continue;
 
                         case 'radio':
-                            field = form.querySelector(`[name=${name.replace('_', '')}][value=${json[name]}`);
+                            field = this.formIdUpdate.querySelector(`[name=${name.replace('_', '')}][value=${json[name]}`);
                             field.checked = true;
                             break;
 
@@ -104,7 +122,7 @@ class UserController {
                     }
                 }
             }
-
+            this.formIdUpdate.querySelector(".photo").src = json._photo;
             this.showPainelUpdate();
         })
     }
@@ -134,7 +152,7 @@ class UserController {
 
             if (!user) return false;
 
-            this.getPhoto().then(
+            this.getPhoto(this.formIdCreate).then(
                 (content) => {
                     user.photo = content;
                     this.addLine(user);
@@ -149,11 +167,11 @@ class UserController {
         });
     }
 
-    getPhoto() {
+    getPhoto(form) {
         return new Promise((resolve, reject) => {
             let fileReader = new FileReader();
 
-            let itens = [...this.formIdCreate.elements].filter(item => {
+            let itens = [...form.elements].filter(item => {
                 if (item.name === 'photo') {
                     return item;
                 }
